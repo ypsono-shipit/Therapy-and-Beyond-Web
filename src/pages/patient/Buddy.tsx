@@ -46,8 +46,8 @@ export default function Buddy() {
           <div className="chat-thread">
             {(messages ?? []).length === 0 && (
               <p className="empty">
-                Say hello — Chat Buddy is here to listen. This isn&apos;t a replacement for therapy, and your clinician can
-                read this conversation.
+                Say hello — Chat Buddy is here to listen. This isn&apos;t a replacement for therapy. If you link a
+                clinician, they can read this conversation.
               </p>
             )}
             {(messages ?? []).map((m) => (

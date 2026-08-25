@@ -4,11 +4,11 @@ import { useAuth } from '../../context/AuthProvider';
 import { supabase } from '../../lib/supabase';
 
 const PATIENT_STEPS = [
-  { icon: Heart, title: 'Welcome to Therapy & Beyond', body: "This app helps you stay connected with your clinician between sessions. Here's a quick look at what you can do." },
-  { icon: Heart, title: 'Daily Check-In', body: 'Log your mood, anxiety, energy, sleep, and medication once a day. Your clinician sees this to prepare for your next session.' },
+  { icon: Heart, title: 'Welcome to Therapy & Beyond', body: "Track how you're feeling, journal by voice, and talk with Chat Buddy — with a clinician if you have one, or on your own if you don't." },
+  { icon: Heart, title: 'Daily Check-In', body: 'Log your mood, anxiety, energy, sleep, and medication once a day. If you link a clinician later, they can see this to prepare for your next session.' },
   { icon: Mic, title: 'Voice Journal', body: "Record a short voice note about how you're feeling. It's transcribed privately, and can automatically fill in that day's check-in for you." },
   { icon: TrendingUp, title: 'Progress', body: 'See your mood and streak trends over time, and revisit past check-ins and journal entries.' },
-  { icon: Lock, title: 'Your data, your control', body: 'Review or withdraw consent any time from Profile → Your Data & Privacy. Your data is shared only with your clinician.' },
+  { icon: Lock, title: 'Your data, your control', body: 'Review or withdraw consent any time from Profile. Check-ins stay yours until you link a clinician — then they’re shared only with that clinician.' },
 ];
 
 const CLINICIAN_STEPS = [

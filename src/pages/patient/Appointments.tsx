@@ -6,7 +6,7 @@ import { useMyClinician } from '../../hooks/useMyClinician';
 import { FALLBACK_CLINICIAN_AVATAR } from '../../types';
 
 export default function Appointments() {
-  const { session } = useAuth();
+  const { session, hasClinician } = useAuth();
   const { data: sessions = [] } = useSessions(session?.user.id);
   const { data: clinician } = useMyClinician(session?.user.id);
   const [tab, setTab] = useState<'upcoming' | 'past'>('upcoming');
@@ -17,6 +17,14 @@ export default function Appointments() {
   return (
     <div className="page">
       <h1 className="page-title">Appointments</h1>
+      {!hasClinician && (
+        <div className="card" style={{ margin: '16px 0' }}>
+          <p className="muted">Appointments show up here once you link a clinician.</p>
+          <Link className="btn btn-primary" to="/app/find-clinician" style={{ marginTop: 8 }}>
+            Find a clinician
+          </Link>
+        </div>
+      )}
       {clinician && (
         <div className="card row" style={{ margin: '16px 0' }}>
           <img className="avatar" src={clinician.avatar ?? FALLBACK_CLINICIAN_AVATAR} alt="" />

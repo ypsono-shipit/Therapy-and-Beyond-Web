@@ -44,14 +44,24 @@ const CLINICIAN_NAV = [
 const CLINICIAN_MORE = [{ to: '/clinic/profile', label: 'Profile', icon: User }];
 
 export function AppShell({ role, children }: { role: Role; children: ReactNode }) {
-  const { profile, signOut } = useAuth();
+  const { profile, signOut, hasClinician } = useAuth();
   const { data: alerts = [] } = useAlerts();
   const unresolved = role === 'clinician' ? alerts.filter((a) => !a.resolved).length : 0;
   const navigate = useNavigate();
-  const nav = role === 'patient' ? PATIENT_NAV : CLINICIAN_NAV;
-  const more = role === 'patient' ? PATIENT_MORE : CLINICIAN_MORE;
+  const nav =
+    role === 'patient'
+      ? hasClinician
+        ? PATIENT_NAV
+        : PATIENT_NAV.filter((item) => item.to !== '/app/messages')
+      : CLINICIAN_NAV;
+  const more =
+    role === 'patient'
+      ? hasClinician
+        ? PATIENT_MORE
+        : PATIENT_MORE.filter((item) => item.to !== '/app/appointments')
+      : CLINICIAN_MORE;
   const accentClass = role === 'clinician' ? 'clinician' : '';
-  const mobileNav = role === 'patient' ? PATIENT_NAV : CLINICIAN_NAV;
+  const mobileNav = nav;
 
   return (
     <div className="shell has-bottom-pad">

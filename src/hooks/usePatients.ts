@@ -6,7 +6,7 @@ function mapRow(row: Record<string, unknown>): Patient {
   const profiles = row.profiles as { name?: string; email?: string; avatar_url?: string } | null;
   return {
     id: row.id as string,
-    clinician_id: row.clinician_id as string,
+    clinician_id: (row.clinician_id as string | null) ?? null,
     name: profiles?.name ?? 'Unknown',
     email: profiles?.email ?? '',
     avatar: profiles?.avatar_url ?? FALLBACK_AVATAR,

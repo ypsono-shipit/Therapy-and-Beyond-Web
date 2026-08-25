@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Flame, Calendar, Heart, Mic, MessageCircle, BookOpen } from 'lucide-react';
+import { Flame, Calendar, Heart, Mic, MessageCircle, BookOpen, Sparkles } from 'lucide-react';
 import { useAuth } from '../../context/AuthProvider';
 import { usePatientRecord } from '../../hooks/usePatients';
 import { useCheckIns } from '../../hooks/useCheckIns';
@@ -9,7 +9,7 @@ import { MoodBar, Spinner } from '../../components/ui';
 import { FALLBACK_AVATAR } from '../../types';
 
 export default function Home() {
-  const { session, profile } = useAuth();
+  const { session, profile, hasClinician } = useAuth();
   const patientId = session?.user.id;
   const { data: patient } = usePatientRecord(patientId);
   const { data: checkIns, isLoading } = useCheckIns(patientId);
@@ -107,7 +107,9 @@ export default function Home() {
         {[
           { to: '/app/check-in', label: 'Check In', icon: Heart, color: 'var(--burgundy)' },
           { to: '/app/journal', label: 'Voice Journal', icon: Mic, color: 'var(--gold)' },
-          { to: '/app/messages', label: 'Messages', icon: MessageCircle, color: 'var(--sage)' },
+          hasClinician
+            ? { to: '/app/messages', label: 'Messages', icon: MessageCircle, color: 'var(--sage)' }
+            : { to: '/app/buddy', label: 'Chat Buddy', icon: Sparkles, color: 'var(--sage)' },
           { to: '/app/resources', label: 'Resources', icon: BookOpen, color: 'var(--charcoal)' },
         ].map((a) => (
           <Link key={a.to} to={a.to} className="card" style={{ textDecoration: 'none', textAlign: 'center' }}>

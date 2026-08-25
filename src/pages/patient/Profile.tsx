@@ -54,7 +54,7 @@ export default function Profile() {
         <p>Email: {profile.email}</p>
         <p>Emergency: {d.emergencyContact || '—'}</p>
       </div>
-      {clinician && (
+      {clinician ? (
         <div className="card" style={{ marginTop: 14 }}>
           <strong>My Clinician</strong>
           <div className="row" style={{ marginTop: 10 }}>
@@ -65,6 +65,14 @@ export default function Profile() {
               <div className="muted">{clinician.clinic}</div>
             </div>
           </div>
+        </div>
+      ) : (
+        <div className="card" style={{ marginTop: 14 }}>
+          <strong>No clinician linked</strong>
+          <p className="muted">You&apos;re using check-ins and Chat Buddy on your own. Link a clinician anytime if you start therapy.</p>
+          <Link className="btn btn-primary" to="/app/find-clinician" style={{ marginTop: 8 }}>
+            Find a clinician
+          </Link>
         </div>
       )}
       <div className="card" style={{ marginTop: 14 }}>

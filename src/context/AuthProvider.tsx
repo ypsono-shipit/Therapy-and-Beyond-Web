@@ -11,6 +11,7 @@ interface AuthContextValue {
   patientProvisioned: boolean | null;
   provisionError: string | null;
   needsClinicianSelection: boolean;
+  hasClinician: boolean;
   signUp: (params: {
     email: string;
     password: string;
@@ -22,6 +23,7 @@ interface AuthContextValue {
   recordConsent: (consentType: ConsentType, granted: boolean) => Promise<{ error: string | null }>;
   retryProvisioning: () => Promise<void>;
   selectClinician: (clinicianId: string) => Promise<{ error: string | null }>;
+  continueWithoutClinician: () => Promise<{ error: string | null }>;
   refreshProfile: (userId?: string) => Promise<void>;
 }
 
@@ -35,6 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [patientProvisioned, setPatientProvisioned] = useState<boolean | null>(null);
   const [provisionError, setProvisionError] = useState<string | null>(null);
   const [needsClinicianSelection, setNeedsClinicianSelection] = useState(false);
+  const [hasClinician, setHasClinician] = useState(false);
 
   const loadProfileAndConsents = useCallback(async (userId: string) => {
     const { data: profileRow } = await supabase.from('profiles').select('*').eq('id', userId).single();
@@ -51,11 +54,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setConsents(map);
 
     if (profileRow?.role === 'patient') {
-      const { data: patientRow } = await supabase.from('patients').select('id').eq('id', userId).maybeSingle();
+      const { data: patientRow } = await supabase
+        .from('patients')
+        .select('id, clinician_id')
+        .eq('id', userId)
+        .maybeSingle();
       setPatientProvisioned(!!patientRow);
+      setHasClinician(!!patientRow?.clinician_id);
       if (patientRow) setNeedsClinicianSelection(false);
     } else {
       setPatientProvisioned(null);
+      setHasClinician(false);
       setNeedsClinicianSelection(false);
     }
   }, []);
@@ -88,6 +97,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [session, loadProfileAndConsents],
   );
 
+  const continueWithoutClinician = useCallback(async () => {
+    if (!session?.user.id) return { error: 'Not signed in' };
+    const { error } = await supabase.rpc('provision_patient_solo');
+    if (error) return { error: error.message };
+    setNeedsClinicianSelection(false);
+    await loadProfileAndConsents(session.user.id);
+    return { error: null };
+  }, [session, loadProfileAndConsents]);
+
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
       setSession(data.session);
@@ -103,6 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile(null);
         setConsents({} as Record<ConsentType, boolean>);
         setPatientProvisioned(null);
+        setHasClinician(false);
         setNeedsClinicianSelection(false);
       }
       setLoading(false);
@@ -165,12 +184,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         patientProvisioned,
         provisionError,
         needsClinicianSelection,
+        hasClinician,
         signUp,
         signIn,
         signOut,
         recordConsent,
         retryProvisioning,
         selectClinician,
+        continueWithoutClinician,
         refreshProfile,
       }}
     >

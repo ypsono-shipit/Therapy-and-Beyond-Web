@@ -145,8 +145,7 @@ export default function SignUp() {
             </div>
             {role === 'patient' && (
               <p className="muted" style={{ fontSize: 13 }}>
-                Your clinician needs to invite you by email before you can check in — sign up first, then ask them to
-                send the invite if you haven&apos;t already.
+                You can link a clinician if you have one, or continue on your own with daily check-ins and Chat Buddy.
               </p>
             )}
             <div>

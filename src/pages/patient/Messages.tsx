@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Send } from 'lucide-react';
 import { useAuth } from '../../context/AuthProvider';
 import { useMessages, useSendMessage } from '../../hooks/useMessages';
@@ -21,6 +21,17 @@ export default function Messages() {
   const { data: messages, isLoading } = useMessages(patientId);
   const sendMessage = useSendMessage(patientId);
   const [draft, setDraft] = useState('');
+
+  if (role === 'patient' && !clinician) {
+    return (
+      <div className="page empty">
+        <p>Messaging is available once you link a clinician.</p>
+        <Link className="btn btn-primary" to="/app/find-clinician" style={{ marginTop: 12 }}>
+          Find a clinician
+        </Link>
+      </div>
+    );
+  }
 
   if (role === 'clinician' && !patientId) {
     return (

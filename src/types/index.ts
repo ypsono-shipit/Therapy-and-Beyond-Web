@@ -32,7 +32,7 @@ export interface PatientDemographics {
 
 export interface Patient {
   id: string;
-  clinician_id: string;
+  clinician_id: string | null;
   name: string;
   email: string;
   avatar: string;

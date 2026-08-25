@@ -64,6 +64,7 @@ function PatientApp() {
         <Route path="resources" element={<Resources />} />
         <Route path="appointments" element={<Appointments />} />
         <Route path="privacy-data" element={<PrivacyData />} />
+        <Route path="find-clinician" element={<SelectClinician later />} />
         <Route path="*" element={<Navigate to="home" replace />} />
       </Routes>
     </AppShell>
