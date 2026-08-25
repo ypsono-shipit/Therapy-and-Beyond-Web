@@ -19,6 +19,7 @@ export default function Profile() {
   const queryClient = useQueryClient();
   const [uploading, setUploading] = useState(false);
   const [savingCycle, setSavingCycle] = useState(false);
+  const [cycleError, setCycleError] = useState<string | null>(null);
   const cycleQueryKey = ['patients', patientId, 'cycle_tracking_opt_in'] as const;
   const { data: cycleOptIn } = useQuery({
     queryKey: cycleQueryKey,
@@ -34,10 +35,14 @@ export default function Profile() {
     if (!patientId || savingCycle) return;
     const next = !cycleOptIn;
     setSavingCycle(true);
+    setCycleError(null);
+    queryClient.setQueryData(cycleQueryKey, next);
     try {
       const { error } = await supabase.from('patients').update({ cycle_tracking_opt_in: next }).eq('id', patientId);
       if (error) throw error;
-      queryClient.setQueryData(cycleQueryKey, next);
+    } catch (e) {
+      queryClient.setQueryData(cycleQueryKey, !next);
+      setCycleError(e instanceof Error ? e.message : 'Could not update cycle tracking.');
     } finally {
       setSavingCycle(false);
     }
@@ -108,14 +113,20 @@ export default function Profile() {
           {patient.streakDays} day streak · {checkIns?.length ?? 0} check-ins
         </p>
       </div>
-      <div className="card row space-between" style={{ marginTop: 14 }}>
-        <div>
-          <strong>Cycle tracking</strong>
-          <p className="muted" style={{ margin: '4px 0 0' }}>
-            Optional. When on, check-ins can include cycle phase. Nothing is shown unless you opt in.
-          </p>
+      <div className="card" style={{ marginTop: 14 }}>
+        <div className="row space-between">
+          <div style={{ paddingRight: 12 }}>
+            <strong>Menstrual cycle tracking</strong>
+            <p className="muted" style={{ margin: '4px 0 0' }}>
+              Optional. If you turn this on, daily check-ins include a cycle-phase chip (menstrual, follicular,
+              ovulatory, luteal) so patterns with mood, sleep, or anxiety can be spotted later. Off by default, never
+              required, and only you and a linked clinician would see it.
+            </p>
+          </div>
+          <Switch on={Boolean(cycleOptIn)} onToggle={() => void toggleCycleTracking()} />
         </div>
-        <Switch on={Boolean(cycleOptIn)} onToggle={() => void toggleCycleTracking()} />
+        {savingCycle && <p className="muted" style={{ margin: '8px 0 0' }}>Saving…</p>}
+        {cycleError && <p className="error">{cycleError}</p>}
       </div>
       <div className="stack" style={{ marginTop: 14 }}>
         <Link className="card" to="/app/privacy-data" style={{ textDecoration: 'none' }}>
