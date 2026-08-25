@@ -13,6 +13,9 @@ function mapRow(row: Record<string, unknown>): Alert {
     severity: row.severity as Alert['severity'],
     timestamp: row.created_at as string,
     resolved: row.resolved as boolean,
+    clinicianRating: (row.clinician_rating as number | null) ?? null,
+    clinicianFeedback: (row.clinician_feedback as string | null) ?? null,
+    dismissedAsNoise: Boolean(row.dismissed_as_noise),
   };
 }
 
@@ -34,6 +37,24 @@ export function useResolveAlert() {
   return useMutation({
     mutationFn: async (alertId: string) => {
       const { error } = await supabase.rpc('resolve_alert', { p_alert_id: alertId });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['alerts'] });
+    },
+  });
+}
+
+export function useRateAlert() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { alertId: string; rating: number; feedback?: string | null; noise: boolean }) => {
+      const { error } = await supabase.rpc('rate_alert', {
+        p_alert_id: input.alertId,
+        p_rating: input.rating,
+        p_feedback: input.feedback?.trim() ? input.feedback.trim() : null,
+        p_noise: input.noise,
+      });
       if (error) throw error;
     },
     onSuccess: () => {

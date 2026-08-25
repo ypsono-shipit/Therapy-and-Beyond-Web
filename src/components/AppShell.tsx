@@ -12,6 +12,7 @@ import {
   User,
   BookOpen,
   Calendar,
+  Shield,
   LogOut,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthProvider';
@@ -30,6 +31,7 @@ const PATIENT_NAV = [
 ];
 
 const PATIENT_MORE = [
+  { to: '/app/safety', label: 'Safety', icon: Shield },
   { to: '/app/appointments', label: 'Appointments', icon: Calendar },
   { to: '/app/resources', label: 'Resources', icon: BookOpen },
   { to: '/app/profile', label: 'Profile', icon: User },

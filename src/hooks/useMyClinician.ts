@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { FALLBACK_CLINICIAN_AVATAR } from '../types';
 
@@ -9,6 +9,15 @@ export interface ClinicianInfo {
   clinic: string;
   avatar: string;
   email: string;
+  officeHours: string;
+  officeHoursTz: string;
+  officeHoursNote: string;
+}
+
+export interface ClinicianSettings {
+  officeHours: string;
+  officeHoursTz: string;
+  officeHoursNote: string;
 }
 
 export function useMyClinician(patientId: string | undefined) {
@@ -25,7 +34,7 @@ export function useMyClinician(patientId: string | undefined) {
 
       const { data, error } = await supabase
         .from('clinicians')
-        .select('id, title, clinic, profiles(name, email, avatar_url)')
+        .select('id, title, clinic, office_hours, office_hours_tz, office_hours_note, profiles(name, email, avatar_url)')
         .eq('id', patientRow.clinician_id)
         .single();
       if (error) throw error;
@@ -37,8 +46,53 @@ export function useMyClinician(patientId: string | undefined) {
         clinic: (data.clinic as string) ?? '',
         avatar: profile?.avatar_url ?? FALLBACK_CLINICIAN_AVATAR,
         email: profile?.email ?? '',
+        officeHours: (data.office_hours as string) ?? '',
+        officeHoursTz: (data.office_hours_tz as string) ?? 'Asia/Singapore',
+        officeHoursNote: (data.office_hours_note as string) ?? '',
       };
     },
     enabled: !!patientId,
+  });
+}
+
+export function useClinicianSettings(clinicianId: string | undefined) {
+  return useQuery({
+    queryKey: ['clinician_settings', clinicianId],
+    queryFn: async (): Promise<ClinicianSettings> => {
+      const { data, error } = await supabase
+        .from('clinicians')
+        .select('office_hours, office_hours_tz, office_hours_note')
+        .eq('id', clinicianId)
+        .single();
+      if (error) throw error;
+      return {
+        officeHours: (data.office_hours as string) ?? '',
+        officeHoursTz: (data.office_hours_tz as string) ?? 'Asia/Singapore',
+        officeHoursNote: (data.office_hours_note as string) ?? '',
+      };
+    },
+    enabled: !!clinicianId,
+  });
+}
+
+export function useUpdateClinicianSettings(clinicianId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: ClinicianSettings) => {
+      if (!clinicianId) throw new Error('Missing clinician id');
+      const { error } = await supabase
+        .from('clinicians')
+        .update({
+          office_hours: input.officeHours.trim() || null,
+          office_hours_tz: input.officeHoursTz.trim() || 'Asia/Singapore',
+          office_hours_note: input.officeHoursNote.trim() || null,
+        })
+        .eq('id', clinicianId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clinician_settings', clinicianId] });
+      queryClient.invalidateQueries({ queryKey: ['my_clinician'] });
+    },
   });
 }

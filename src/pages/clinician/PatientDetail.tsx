@@ -8,10 +8,92 @@ import { useAuditLog, useLogAuditEvent } from '../../hooks/useAuditLog';
 import { useInsight, useGenerateInsight } from '../../hooks/useInsight';
 import { useAIChatMessages, useAIChatSummary, useGenerateAIChatSummary } from '../../hooks/useAIChat';
 import { usePatients } from '../../hooks/usePatients';
+import { useCreateLifeEvent, useDeleteLifeEvent, useLifeEvents, useUpdateLifeEvent } from '../../hooks/useLifeEvents';
 import { MoodBar, Modal, Spinner } from '../../components/ui';
 import { FALLBACK_AVATAR, type Patient } from '../../types';
 
 const TABS = ['Overview', 'Insights', 'AI Buddy', 'Sessions', 'Alerts', 'Audit Log'] as const;
+
+function localISODate(d = new Date()) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function LifeEventsPanel({ patientId }: { patientId: string }) {
+  const { data: events = [] } = useLifeEvents(patientId);
+  const createEvent = useCreateLifeEvent(patientId);
+  const updateEvent = useUpdateLifeEvent(patientId);
+  const deleteEvent = useDeleteLifeEvent(patientId);
+  const [label, setLabel] = useState('');
+  const [date, setDate] = useState(localISODate());
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const reset = () => {
+    setLabel('');
+    setDate(localISODate());
+    setEditingId(null);
+  };
+
+  const save = () => {
+    if (!label.trim() || !date) return;
+    if (editingId) {
+      updateEvent.mutate({ id: editingId, label: label.trim(), occurredOn: date }, { onSuccess: reset });
+    } else {
+      createEvent.mutate({ label: label.trim(), occurredOn: date }, { onSuccess: reset });
+    }
+  };
+
+  return (
+    <div className="card" style={{ marginBottom: 14 }}>
+      <strong>Events</strong>
+      {events.length === 0 && <p className="muted">No life events yet.</p>}
+      {events.map((e) => (
+        <div key={e.id} className="row space-between" style={{ padding: '8px 0' }}>
+          <div>
+            <div>{e.label}</div>
+            <div className="muted">{e.occurredOn}</div>
+          </div>
+          <div className="row">
+            <button
+              type="button"
+              className="btn btn-sm btn-ghost"
+              onClick={() => {
+                setEditingId(e.id);
+                setLabel(e.label);
+                setDate(e.occurredOn);
+              }}
+            >
+              Edit
+            </button>
+            <button type="button" className="btn btn-sm btn-ghost" onClick={() => deleteEvent.mutate(e.id)}>
+              Remove
+            </button>
+          </div>
+        </div>
+      ))}
+      <label className="label" style={{ marginTop: 8 }}>
+        {editingId ? 'Edit event' : 'Add event'}
+      </label>
+      <input className="input" placeholder="started new job" value={label} onChange={(e) => setLabel(e.target.value)} />
+      <div className="row" style={{ marginTop: 8 }}>
+        <input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+        <button type="button" className="btn btn-sm btn-sage" disabled={createEvent.isPending || updateEvent.isPending} onClick={save}>
+          {editingId ? 'Update' : 'Add'}
+        </button>
+        {editingId && (
+          <button type="button" className="btn btn-sm btn-ghost" onClick={reset}>
+            Cancel
+          </button>
+        )}
+      </div>
+      {(createEvent.isError || updateEvent.isError || deleteEvent.isError) && (
+        <p className="error">{((createEvent.error || updateEvent.error || deleteEvent.error) as Error).message}</p>
+      )}
+    </div>
+  );
+}
 
 export default function PatientDetail() {
   const { id } = useParams();
@@ -68,9 +150,14 @@ export default function PatientDetail() {
             </div>
           </div>
         </div>
-        <Link className="btn btn-ghost" to={`/clinic/messages?patientId=${patient.id}`}>
-          Message
-        </Link>
+        <div className="row">
+          <Link className="btn btn-ghost" to={`/clinic/messages?patientId=${patient.id}`}>
+            Message
+          </Link>
+          <Link className="btn btn-sage" to={`/clinic/patients/${patient.id}/briefing`} state={{ patient }}>
+            Pre-session brief
+          </Link>
+        </div>
       </div>
 
       <div className="tabs" style={{ marginBottom: 16 }}>
@@ -105,6 +192,8 @@ export default function PatientDetail() {
               <MoodBar label="Mood" value={checkins[0].mood} color="var(--sage)" />
               <MoodBar label="Anxiety" value={checkins[0].anxiety} color="var(--danger)" />
               <MoodBar label="Energy" value={checkins[0].energy} color="var(--gold)" />
+              {checkins[0].appetite != null && <MoodBar label="Appetite" value={checkins[0].appetite} color="var(--burgundy)" />}
+              {checkins[0].functioning != null && <MoodBar label="Function" value={checkins[0].functioning} color="var(--sage)" />}
               <p className="muted">
                 {checkins[0].sleepDuration}h · {checkins[0].sleepQuality} · {checkins[0].medicationTaken ? 'Meds taken' : 'Meds missed'}
               </p>
@@ -112,6 +201,7 @@ export default function PatientDetail() {
               {checkins[0].notes && <p>Notes: {checkins[0].notes}</p>}
             </div>
           )}
+          <LifeEventsPanel patientId={patient.id} />
           <div className="card">
             <strong>Check-In History ({checkins.length})</strong>
             {checkins.slice(0, 8).map((c) => (

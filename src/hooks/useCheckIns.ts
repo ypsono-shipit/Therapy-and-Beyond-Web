@@ -16,6 +16,12 @@ function mapRow(row: Record<string, unknown>): CheckIn {
     notes: (row.notes as string) ?? '',
     timestamp: row.created_at as string,
     source: (row.source as CheckIn['source']) ?? 'patient',
+    appetite: (row.appetite as number | null) ?? null,
+    functioning: (row.functioning as number | null) ?? null,
+    copingUsed: (row.coping_used as string[] | null) ?? [],
+    wins: (row.wins as string) ?? '',
+    stressors: (row.stressors as string) ?? '',
+    cyclePhase: (row.cycle_phase as string) ?? '',
   };
 }
 
@@ -50,6 +56,12 @@ export interface NewCheckIn {
   medicationTaken: boolean;
   significantEvent: string;
   notes: string;
+  appetite?: number | null;
+  functioning?: number | null;
+  copingUsed?: string[];
+  wins?: string;
+  stressors?: string;
+  cyclePhase?: string;
 }
 
 export function useSubmitCheckIn(patientId: string | undefined) {
@@ -67,11 +79,14 @@ export function useSubmitCheckIn(patientId: string | undefined) {
         medication_taken: input.medicationTaken,
         significant_event: input.significantEvent || null,
         notes: input.notes || null,
+        appetite: input.appetite ?? null,
+        functioning: input.functioning ?? null,
+        coping_used: input.copingUsed?.length ? input.copingUsed : null,
+        wins: input.wins || null,
+        stressors: input.stressors || null,
+        cycle_phase: input.cyclePhase || null,
       });
-      if (error) {
-        if (error.code === '23505') throw new Error("You've already checked in today.");
-        throw error;
-      }
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['check_ins', patientId] });

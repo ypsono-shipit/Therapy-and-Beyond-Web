@@ -8,33 +8,54 @@ import { useUpcomingSessionsCount } from '../../hooks/useSessions';
 import { useCheckIns } from '../../hooks/useCheckIns';
 import { supabase, readFunctionError } from '../../lib/supabase';
 import { Modal, Spinner } from '../../components/ui';
-import { FALLBACK_AVATAR, type Patient } from '../../types';
+import { FALLBACK_AVATAR, type Alert, type Patient } from '../../types';
+import { patientRiskLevel, type RiskLevel } from '../../lib/risk';
 
-function PatientCard({ patient, alertCount }: { patient: Patient; alertCount: number }) {
+function riskChipStyle(level: RiskLevel): { background: string; color: string } {
+  if (level === 'urgent') return { background: 'var(--danger)', color: 'var(--white)' };
+  if (level === 'high') return { background: 'var(--danger-dim)', color: 'var(--danger)' };
+  if (level === 'moderate') return { background: 'var(--warning-dim)', color: 'var(--warning)' };
+  if (level === 'low') return { background: 'var(--sage-dim)', color: 'var(--sage)' };
+  return { background: 'var(--surface)', color: 'var(--muted)' };
+}
+
+function PatientCard({ patient, alerts }: { patient: Patient; alerts: Alert[] }) {
   const { data: checkIns } = useCheckIns(patient.id);
   const last7 = (checkIns ?? []).filter((c) => Date.now() - new Date(c.timestamp).getTime() < 7 * 24 * 60 * 60 * 1000);
   const rate = Math.round((last7.length / 7) * 100);
   const last = checkIns?.[0];
+  const risk = patientRiskLevel(alerts);
+  const alertCount = alerts.filter((a) => !a.resolved).length;
   return (
-    <Link to={`/clinic/patients/${patient.id}`} state={{ patient }} className="card row" style={{ textDecoration: 'none' }}>
-      <img className="avatar" src={patient.avatar || FALLBACK_AVATAR} alt="" />
-      <div style={{ flex: 1 }}>
-        <div className="row space-between">
-          <strong>{patient.name}</strong>
-          {alertCount > 0 && (
-            <span className="pill" style={{ background: 'var(--danger-dim)', color: 'var(--danger)' }}>
-              {alertCount} alert{alertCount > 1 ? 's' : ''}
+    <div className="card row">
+      <Link to={`/clinic/patients/${patient.id}`} state={{ patient }} className="row" style={{ flex: 1, textDecoration: 'none', minWidth: 0 }}>
+        <img className="avatar" src={patient.avatar || FALLBACK_AVATAR} alt="" />
+        <div style={{ flex: 1 }}>
+          <div className="row space-between">
+            <strong>{patient.name}</strong>
+            <span className="row" style={{ gap: 6 }}>
+              <span className="pill" style={riskChipStyle(risk)}>
+                {risk === 'none' ? 'No risk' : risk.charAt(0).toUpperCase() + risk.slice(1)}
+              </span>
+              {alertCount > 0 && (
+                <span className="pill" style={{ background: 'var(--danger-dim)', color: 'var(--danger)' }}>
+                  {alertCount} alert{alertCount > 1 ? 's' : ''}
+                </span>
+              )}
             </span>
-          )}
+          </div>
+          <div className="muted">
+            {patient.age} · {patient.gender} · {patient.demographics.occupation}
+          </div>
+          <div className="muted">
+            {patient.streakDays}d streak{last ? ` · Mood ${last.mood}/10` : ''} · {rate}% 7-day
+          </div>
         </div>
-        <div className="muted">
-          {patient.age} · {patient.gender} · {patient.demographics.occupation}
-        </div>
-        <div className="muted">
-          {patient.streakDays}d streak{last ? ` · Mood ${last.mood}/10` : ''} · {rate}% 7-day
-        </div>
-      </div>
-    </Link>
+      </Link>
+      <Link to={`/clinic/patients/${patient.id}/briefing`} state={{ patient }} className="btn btn-sm btn-ghost" style={{ flexShrink: 0 }}>
+        Brief
+      </Link>
+    </div>
   );
 }
 
@@ -48,7 +69,7 @@ export default function Dashboard() {
   const { data: alerts = [] } = useAlerts();
   const { data: upcomingCount = 0 } = useUpcomingSessionsCount();
   const unresolved = alerts.filter((a) => !a.resolved);
-  const high = unresolved.filter((a) => a.severity === 'high');
+  const high = unresolved.filter((a) => a.severity === 'high' || a.severity === 'urgent');
 
   const sendInvite = async () => {
     if (!session?.user.id || !inviteEmail.trim()) return;
@@ -113,7 +134,7 @@ export default function Dashboard() {
       {!isLoading && patients.length === 0 && <p className="empty">No patients yet — invite one to get started.</p>}
       <div className="stack" style={{ marginTop: 12 }}>
         {patients.map((p) => (
-          <PatientCard key={p.id} patient={p} alertCount={unresolved.filter((a) => a.patient_id === p.id).length} />
+          <PatientCard key={p.id} patient={p} alerts={alerts.filter((a) => a.patient_id === p.id)} />
         ))}
       </div>
 

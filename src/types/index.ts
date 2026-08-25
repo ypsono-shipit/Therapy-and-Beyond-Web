@@ -56,6 +56,12 @@ export interface CheckIn {
   notes: string;
   timestamp: string;
   source: 'patient' | 'voice_journal';
+  appetite?: number | null;
+  functioning?: number | null;
+  copingUsed?: string[];
+  wins?: string;
+  stressors?: string;
+  cyclePhase?: string;
 }
 
 export interface VoiceJournal {
@@ -96,17 +102,87 @@ export interface Message {
   isCompletedExercise?: boolean;
 }
 
-export type AlertSeverity = 'low' | 'medium' | 'high';
+export type AlertSeverity = 'low' | 'medium' | 'moderate' | 'high' | 'urgent';
+
+export type AlertType =
+  | 'mood_drop'
+  | 'missed_med'
+  | 'anxiety_spike'
+  | 'missed_checkin'
+  | 'ai_chat_flag'
+  | 'risk_warning'
+  | 'sleep_mood'
+  | 'work_stress'
+  | 'isolation'
+  | 'med_pattern';
 
 export interface Alert {
   id: string;
   patient_id: string;
   patientName: string;
-  type: 'mood_drop' | 'missed_med' | 'anxiety_spike' | 'missed_checkin' | 'ai_chat_flag';
+  type: AlertType;
   message: string;
   severity: AlertSeverity;
   timestamp: string;
   resolved: boolean;
+  clinicianRating?: number | null;
+  clinicianFeedback?: string | null;
+  dismissedAsNoise?: boolean;
+}
+
+export interface EmergencyContact {
+  id: string;
+  patient_id: string;
+  name: string;
+  relationship: string;
+  phone: string;
+  isPrimary: boolean;
+}
+
+export interface SafetyPlan {
+  id: string;
+  patient_id: string;
+  warningSigns: string[];
+  internalCoping: string[];
+  peopleAndPlaces: string[];
+  professionalHelp: string[];
+  makeEnvironmentSafe: string[];
+  reasonsForLiving: string[];
+  updatedAt: string;
+}
+
+export type CopingKind = 'grounding' | 'breathing' | 'crisis_plan' | 'playlist' | 'affirmation' | 'distraction' | 'custom';
+
+export interface CopingItem {
+  id: string;
+  patient_id: string;
+  kind: CopingKind;
+  title: string;
+  body: string;
+  url: string | null;
+  isPreset: boolean;
+}
+
+export interface HelpfulStrategy {
+  id: string;
+  patient_id: string;
+  strategy: string;
+  source: string;
+  timesUsed: number;
+  lastUsedAt: string;
+}
+
+export interface ReminderPrefs {
+  patient_id: string;
+  groundingCadence: 'daily' | 'weekly' | 'biweekly' | 'off';
+  setBy: 'patient' | 'clinician';
+}
+
+export interface LifeEvent {
+  id: string;
+  patient_id: string;
+  label: string;
+  occurredOn: string;
 }
 
 export interface AIChatMessage {

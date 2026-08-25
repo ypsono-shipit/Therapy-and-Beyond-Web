@@ -21,9 +21,11 @@ import Profile from './pages/patient/Profile';
 import Resources from './pages/patient/Resources';
 import Appointments from './pages/patient/Appointments';
 import PrivacyData from './pages/patient/PrivacyData';
+import SafetyHub from './pages/patient/SafetyHub';
 import Dashboard from './pages/clinician/Dashboard';
 import Alerts from './pages/clinician/Alerts';
 import PatientDetail from './pages/clinician/PatientDetail';
+import Briefing from './pages/clinician/Briefing';
 import ClinicianProfile from './pages/clinician/Profile';
 
 const PATIENT_REQUIRED_CONSENTS = ['checkin_data_sharing', 'privacy_policy', 'sensitive_data_processing'] as const;
@@ -64,6 +66,7 @@ function PatientApp() {
         <Route path="resources" element={<Resources />} />
         <Route path="appointments" element={<Appointments />} />
         <Route path="privacy-data" element={<PrivacyData />} />
+        <Route path="safety" element={<SafetyHub />} />
         <Route path="find-clinician" element={<SelectClinician later />} />
         <Route path="*" element={<Navigate to="home" replace />} />
       </Routes>
@@ -86,6 +89,7 @@ function ClinicianApp() {
         <Route path="alerts" element={<Alerts />} />
         <Route path="messages" element={<Messages />} />
         <Route path="profile" element={<ClinicianProfile />} />
+        <Route path="patients/:id/briefing" element={<Briefing />} />
         <Route path="patients/:id" element={<PatientDetail />} />
         <Route path="*" element={<Navigate to="dashboard" replace />} />
       </Routes>

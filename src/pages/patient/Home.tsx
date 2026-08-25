@@ -1,17 +1,21 @@
 import { Link } from 'react-router-dom';
-import { Flame, Calendar, Heart, Mic, MessageCircle, BookOpen, Sparkles } from 'lucide-react';
+import { Flame, Calendar, Heart, Mic, MessageCircle, BookOpen, Sparkles, Shield } from 'lucide-react';
 import { useAuth } from '../../context/AuthProvider';
-import { usePatientRecord } from '../../hooks/usePatients';
-import { useCheckIns } from '../../hooks/useCheckIns';
+import { hasCheckedInToday, useCheckIns } from '../../hooks/useCheckIns';
 import { useSessions } from '../../hooks/useSessions';
 import { useMyClinician } from '../../hooks/useMyClinician';
 import { MoodBar, Spinner } from '../../components/ui';
 import { FALLBACK_AVATAR } from '../../types';
+import {
+  cadenceGuidance,
+  daysLoggedThisWeek,
+  suggestedCadence,
+  weeklyConsistencyPercent,
+} from '../../lib/consistency';
 
 export default function Home() {
   const { session, profile, hasClinician } = useAuth();
   const patientId = session?.user.id;
-  const { data: patient } = usePatientRecord(patientId);
   const { data: checkIns, isLoading } = useCheckIns(patientId);
   const { data: sessions } = useSessions(patientId);
   const { data: clinician } = useMyClinician(patientId);
@@ -19,6 +23,10 @@ export default function Home() {
   const nextSession = sessions?.find((s) => s.status === 'scheduled');
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const daysThisWeek = daysLoggedThisWeek(checkIns);
+  const consistencyPct = Math.round(weeklyConsistencyPercent(checkIns));
+  const showedUp = hasCheckedInToday(checkIns);
+  const cadence = suggestedCadence(checkIns);
 
   return (
     <div className="page">
@@ -38,12 +46,16 @@ export default function Home() {
             <div className="row">
               <Flame color="#ddac5b" />
               <div>
-                <div style={{ fontWeight: 700 }}>{patient?.streakDays ?? 0} day streak</div>
-                <div style={{ color: '#adadad', fontSize: 13 }}>Keep going — you&apos;re doing great</div>
+                <div style={{ fontWeight: 700 }}>
+                  Logged {daysThisWeek} {daysThisWeek === 1 ? 'day' : 'days'} this week
+                </div>
+                <div style={{ color: '#adadad', fontSize: 13 }}>
+                  {showedUp ? 'You showed up today' : cadenceGuidance(cadence)}
+                </div>
               </div>
             </div>
             <span className="pill" style={{ background: '#ddac5b30', color: 'var(--gold)' }}>
-              ACTIVE
+              {consistencyPct}%
             </span>
           </div>
         </div>
@@ -67,9 +79,24 @@ export default function Home() {
                 {nextSession.type}
               </span>
             </div>
+            {clinician.officeHours && (
+              <div className="muted" style={{ marginTop: 10, fontSize: 13 }}>
+                Hours: {clinician.officeHours}
+                {clinician.officeHoursTz ? ` · ${clinician.officeHoursTz}` : ''}
+                {clinician.officeHoursNote ? ` — ${clinician.officeHoursNote}` : ''}
+              </div>
+            )}
           </div>
         )}
       </div>
+
+      {!nextSession && clinician?.officeHours && (
+        <p className="muted" style={{ marginTop: 10, fontSize: 13 }}>
+          Your clinician · {clinician.officeHours}
+          {clinician.officeHoursTz ? ` · ${clinician.officeHoursTz}` : ''}
+          {clinician.officeHoursNote ? ` — ${clinician.officeHoursNote}` : ''}
+        </p>
+      )}
 
       <div className="card" style={{ marginTop: 14 }}>
         <div className="row" style={{ marginBottom: 12 }}>
@@ -100,7 +127,24 @@ export default function Home() {
         ) : (
           <p className="muted">Tap Check In to log how you&apos;re feeling today.</p>
         )}
+        {showedUp && (
+          <p className="muted" style={{ marginTop: 12 }}>
+            {cadenceGuidance(cadence)}
+          </p>
+        )}
       </div>
+
+      <Link to="/app/safety" className="card" style={{ display: 'block', textDecoration: 'none', marginTop: 14 }}>
+        <div className="row">
+          <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--burgundy-dim)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+            <Shield color="var(--burgundy)" size={22} />
+          </div>
+          <div>
+            <strong>Safety hub</strong>
+            <div className="muted">Plan, contacts, and coping tools — fill in when you feel stable</div>
+          </div>
+        </div>
+      </Link>
 
       <h2 style={{ margin: '24px 0 12px', fontSize: 16 }}>Quick Actions</h2>
       <div className="grid grid-4">

@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthProvider';
 import { usePatientRecord } from '../../hooks/usePatients';
 import { useMyClinician } from '../../hooks/useMyClinician';
 import { useCheckIns } from '../../hooks/useCheckIns';
 import { uploadAvatar } from '../../hooks/useAvatarUpload';
 import { FALLBACK_AVATAR, FALLBACK_CLINICIAN_AVATAR } from '../../types';
-import { Spinner } from '../../components/ui';
+import { Spinner, Switch } from '../../components/ui';
+import { supabase } from '../../lib/supabase';
 
 export default function Profile() {
   const { session, profile, signOut, refreshProfile } = useAuth();
@@ -14,7 +16,32 @@ export default function Profile() {
   const { data: patient, isLoading } = usePatientRecord(patientId);
   const { data: clinician } = useMyClinician(patientId);
   const { data: checkIns } = useCheckIns(patientId);
+  const queryClient = useQueryClient();
   const [uploading, setUploading] = useState(false);
+  const [savingCycle, setSavingCycle] = useState(false);
+  const cycleQueryKey = ['patients', patientId, 'cycle_tracking_opt_in'] as const;
+  const { data: cycleOptIn } = useQuery({
+    queryKey: cycleQueryKey,
+    queryFn: async () => {
+      const { data, error } = await supabase.from('patients').select('cycle_tracking_opt_in').eq('id', patientId).single();
+      if (error) throw error;
+      return Boolean((data as { cycle_tracking_opt_in: boolean }).cycle_tracking_opt_in);
+    },
+    enabled: !!patientId,
+  });
+
+  async function toggleCycleTracking() {
+    if (!patientId || savingCycle) return;
+    const next = !cycleOptIn;
+    setSavingCycle(true);
+    try {
+      const { error } = await supabase.from('patients').update({ cycle_tracking_opt_in: next }).eq('id', patientId);
+      if (error) throw error;
+      queryClient.setQueryData(cycleQueryKey, next);
+    } finally {
+      setSavingCycle(false);
+    }
+  }
 
   if (isLoading || !patient || !profile) return <Spinner />;
   const d = patient.demographics;
@@ -80,6 +107,15 @@ export default function Profile() {
         <p>
           {patient.streakDays} day streak · {checkIns?.length ?? 0} check-ins
         </p>
+      </div>
+      <div className="card row space-between" style={{ marginTop: 14 }}>
+        <div>
+          <strong>Cycle tracking</strong>
+          <p className="muted" style={{ margin: '4px 0 0' }}>
+            Optional. When on, check-ins can include cycle phase. Nothing is shown unless you opt in.
+          </p>
+        </div>
+        <Switch on={Boolean(cycleOptIn)} onToggle={() => void toggleCycleTracking()} />
       </div>
       <div className="stack" style={{ marginTop: 14 }}>
         <Link className="card" to="/app/privacy-data" style={{ textDecoration: 'none' }}>
