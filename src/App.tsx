@@ -19,6 +19,7 @@ import Buddy from './pages/patient/Buddy';
 import Progress from './pages/patient/Progress';
 import Profile from './pages/patient/Profile';
 import Resources from './pages/patient/Resources';
+import ResourceGuide from './pages/patient/ResourceGuide';
 import Appointments from './pages/patient/Appointments';
 import PrivacyData from './pages/patient/PrivacyData';
 import SafetyHub from './pages/patient/SafetyHub';
@@ -63,6 +64,7 @@ function PatientApp() {
         <Route path="buddy" element={<Buddy />} />
         <Route path="progress" element={<Progress />} />
         <Route path="profile" element={<Profile />} />
+        <Route path="resources/:id" element={<ResourceGuide />} />
         <Route path="resources" element={<Resources />} />
         <Route path="appointments" element={<Appointments />} />
         <Route path="privacy-data" element={<PrivacyData />} />
