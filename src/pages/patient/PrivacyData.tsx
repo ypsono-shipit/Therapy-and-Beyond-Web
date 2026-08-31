@@ -8,7 +8,6 @@ const DATA_COLLECTED = [
   'Sleep duration & quality',
   'Medication adherence',
   'Voice journal recordings & AI transcripts',
-  'Messages with your clinician',
 ];
 
 export default function PrivacyData() {

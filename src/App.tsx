@@ -14,7 +14,6 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import Home from './pages/patient/Home';
 import CheckIn from './pages/patient/CheckIn';
 import Journal from './pages/patient/Journal';
-import Messages from './pages/patient/Messages';
 import Buddy from './pages/patient/Buddy';
 import Progress from './pages/patient/Progress';
 import Profile from './pages/patient/Profile';
@@ -60,7 +59,6 @@ function PatientApp() {
         <Route path="home" element={<Home />} />
         <Route path="check-in" element={<CheckIn />} />
         <Route path="journal" element={<Journal />} />
-        <Route path="messages" element={<Messages />} />
         <Route path="buddy" element={<Buddy />} />
         <Route path="progress" element={<Progress />} />
         <Route path="profile" element={<Profile />} />
@@ -89,7 +87,6 @@ function ClinicianApp() {
       <Routes>
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="alerts" element={<Alerts />} />
-        <Route path="messages" element={<Messages />} />
         <Route path="profile" element={<ClinicianProfile />} />
         <Route path="patients/:id/briefing" element={<Briefing />} />
         <Route path="patients/:id" element={<PatientDetail />} />

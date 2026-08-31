@@ -151,9 +151,6 @@ export default function PatientDetail() {
           </div>
         </div>
         <div className="row">
-          <Link className="btn btn-ghost" to={`/clinic/messages?patientId=${patient.id}`}>
-            Message
-          </Link>
           <Link className="btn btn-sage" to={`/clinic/patients/${patient.id}/briefing`} state={{ patient }}>
             Pre-session brief
           </Link>

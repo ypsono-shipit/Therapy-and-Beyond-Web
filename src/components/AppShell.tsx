@@ -4,7 +4,6 @@ import {
   Home,
   Heart,
   Mic,
-  MessageCircle,
   Sparkles,
   BarChart3,
   LayoutGrid,
@@ -25,7 +24,6 @@ const PATIENT_NAV = [
   { to: '/app/home', label: 'Home', icon: Home },
   { to: '/app/check-in', label: 'Check-In', icon: Heart },
   { to: '/app/journal', label: 'Journal', icon: Mic },
-  { to: '/app/messages', label: 'Messages', icon: MessageCircle },
   { to: '/app/buddy', label: 'Buddy', icon: Sparkles },
   { to: '/app/progress', label: 'Progress', icon: BarChart3 },
 ];
@@ -40,7 +38,6 @@ const PATIENT_MORE = [
 const CLINICIAN_NAV = [
   { to: '/clinic/dashboard', label: 'Dashboard', icon: LayoutGrid },
   { to: '/clinic/alerts', label: 'Alerts', icon: Bell },
-  { to: '/clinic/messages', label: 'Messages', icon: MessageCircle },
 ];
 
 const CLINICIAN_MORE = [{ to: '/clinic/profile', label: 'Profile', icon: User }];
@@ -50,12 +47,7 @@ export function AppShell({ role, children }: { role: Role; children: ReactNode }
   const { data: alerts = [] } = useAlerts();
   const unresolved = role === 'clinician' ? alerts.filter((a) => !a.resolved).length : 0;
   const navigate = useNavigate();
-  const nav =
-    role === 'patient'
-      ? hasClinician
-        ? PATIENT_NAV
-        : PATIENT_NAV.filter((item) => item.to !== '/app/messages')
-      : CLINICIAN_NAV;
+  const nav = role === 'patient' ? PATIENT_NAV : CLINICIAN_NAV;
   const more =
     role === 'patient'
       ? hasClinician

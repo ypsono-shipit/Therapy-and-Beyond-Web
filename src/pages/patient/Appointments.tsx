@@ -33,9 +33,6 @@ export default function Appointments() {
             <div className="muted">{clinician.title}</div>
             <div className="muted">{clinician.clinic}</div>
           </div>
-          <Link to="/app/messages" className="btn btn-ghost btn-sm">
-            Message
-          </Link>
         </div>
       )}
       <div className="tabs">

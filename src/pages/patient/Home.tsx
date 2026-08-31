@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Flame, Calendar, Heart, Mic, MessageCircle, BookOpen, Sparkles, Shield } from 'lucide-react';
+import { Flame, Calendar, Heart, Mic, BookOpen, Sparkles, Shield } from 'lucide-react';
 import { useAuth } from '../../context/AuthProvider';
 import { hasCheckedInToday, useCheckIns } from '../../hooks/useCheckIns';
 import { useSessions } from '../../hooks/useSessions';
@@ -14,7 +14,7 @@ import {
 } from '../../lib/consistency';
 
 export default function Home() {
-  const { session, profile, hasClinician } = useAuth();
+  const { session, profile } = useAuth();
   const patientId = session?.user.id;
   const { data: checkIns, isLoading } = useCheckIns(patientId);
   const { data: sessions } = useSessions(patientId);
@@ -151,9 +151,7 @@ export default function Home() {
         {[
           { to: '/app/check-in', label: 'Check In', icon: Heart, color: 'var(--burgundy)' },
           { to: '/app/journal', label: 'Voice Journal', icon: Mic, color: 'var(--gold)' },
-          hasClinician
-            ? { to: '/app/messages', label: 'Messages', icon: MessageCircle, color: 'var(--sage)' }
-            : { to: '/app/buddy', label: 'Chat Buddy', icon: Sparkles, color: 'var(--sage)' },
+          { to: '/app/buddy', label: 'Chat Buddy', icon: Sparkles, color: 'var(--sage)' },
           { to: '/app/resources', label: 'Resources', icon: BookOpen, color: 'var(--charcoal)' },
         ].map((a) => (
           <Link key={a.to} to={a.to} className="card" style={{ textDecoration: 'none', textAlign: 'center' }}>

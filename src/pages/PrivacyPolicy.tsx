@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 
 const SECTIONS = [
-  { title: '1. What we collect', body: 'Mood, anxiety, and energy check-ins; sleep duration and quality; medication adherence; optional notes and significant events; voice journal recordings and their AI-generated transcripts; and messages exchanged with your clinician.' },
+  { title: '1. What we collect', body: 'Mood, anxiety, and energy check-ins; sleep duration and quality; medication adherence; optional notes and significant events; and voice journal recordings and their AI-generated transcripts.' },
   { title: '2. Why we collect it', body: 'Solely to generate your clinician’s pre-session brief and support continuity of care between appointments. We do not use your data for marketing or research, and do not sell or share it with third parties.' },
   { title: '3. Who can see it', body: 'Only you and your assigned clinician. Practice staff acting under your clinician’s direction may access records as permitted under the Healthcare Services Act (HCSA).' },
   { title: '4. Our role as Data Intermediary', body: 'Therapy & Beyond processes patient data on behalf of your clinician’s practice under a Data Processing Agreement (DPA). Your practice remains the Data Controller under the PDPA and HCSA.' },
