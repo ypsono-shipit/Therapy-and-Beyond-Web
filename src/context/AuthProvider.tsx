@@ -25,6 +25,7 @@ interface AuthContextValue {
   selectClinician: (clinicianId: string) => Promise<{ error: string | null }>;
   continueWithoutClinician: () => Promise<{ error: string | null }>;
   refreshProfile: (userId?: string) => Promise<void>;
+  completeOnboarding: () => Promise<{ error: string | null }>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -174,6 +175,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [session, loadProfileAndConsents],
   );
 
+  const completeOnboarding = useCallback(async () => {
+    const id = session?.user.id ?? profile?.id;
+    if (!id) return { error: 'Not signed in' };
+    const completedAt = new Date().toISOString();
+    const { error } = await supabase
+      .from('profiles')
+      .update({ onboarding_completed_at: completedAt })
+      .eq('id', id);
+    if (error) return { error: error.message };
+    setProfile((prev) => (prev ? { ...prev, onboarding_completed_at: completedAt } : prev));
+    return { error: null };
+  }, [session, profile?.id]);
+
   return (
     <AuthContext.Provider
       value={{
@@ -193,6 +207,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         selectClinician,
         continueWithoutClinician,
         refreshProfile,
+        completeOnboarding,
       }}
     >
       {children}

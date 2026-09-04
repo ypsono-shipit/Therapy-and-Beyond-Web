@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Heart, Mic, TrendingUp, Lock, LayoutGrid, Bell, Sparkles, UserPlus } from 'lucide-react';
 import { useAuth } from '../../context/AuthProvider';
-import { supabase } from '../../lib/supabase';
 
 const PATIENT_STEPS = [
   { icon: Heart, title: 'Welcome to Therapy & Beyond', body: "Track how you're feeling, journal by voice, and talk with Chat Buddy — with a clinician if you have one, or on your own if you don't." },
@@ -20,7 +19,7 @@ const CLINICIAN_STEPS = [
 ];
 
 export default function Walkthrough() {
-  const { profile, refreshProfile } = useAuth();
+  const { profile, completeOnboarding } = useAuth();
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,16 +30,12 @@ export default function Walkthrough() {
   const finish = async () => {
     if (!profile?.id) return;
     setSaving(true);
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({ onboarding_completed_at: new Date().toISOString() })
-      .eq('id', profile.id);
+    const { error: updateError } = await completeOnboarding();
     if (updateError) {
       setSaving(false);
-      setError(updateError.message);
+      setError(updateError);
       return;
     }
-    await refreshProfile(profile.id);
     setSaving(false);
   };
 
